@@ -6,8 +6,6 @@ const cors = require('cors');
 //const Weather = require('./Weather');
 
 const PORT = 8000;
-//const apiKey = "2a9445a2ca70b0e45e1a1c3baa532fac";
-//const apiEndpoint = "https://api.openweathermap.org/data/2.5/weather";
 
 app.use(cors());
 
