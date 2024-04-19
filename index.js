@@ -3,11 +3,9 @@ const app = express();
 const connection = require('./Connection');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-//const Weather = require('./Weather');
+const Weather = require('./Weather');
 
 const PORT = 8000;
-//const apiKey = "2a9445a2ca70b0e45e1a1c3baa532fac";
-//const apiEndpoint = "https://api.openweathermap.org/data/2.5/weather";
 
 app.use(cors());
 
@@ -28,10 +26,10 @@ function ChangeStream() {
         console.error("Error setting up change stream:", error);
     }
 
-    //console.log("Change stream is active...");
+    console.log("Change stream is active...");
 }
 
-//ChangeStream();
+ChangeStream();
 
 /*function addTemperature() {
     fetch(`https://api.openweathermap.org/data/2.5/weather?q=${"London"}&appid=${apiKey}`)
@@ -64,6 +62,8 @@ app.get('/test', (req, res) => {
 app.use('/user', require('./routes/UserRoute'));
 
 app.use('/getAllUsers', require('./routes/GetAllUsers'));
+
+app.use('/messages', require('./routes/MessagesRoute.js'));
 
 
 app.listen(PORT, () => {
