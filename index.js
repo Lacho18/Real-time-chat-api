@@ -3,7 +3,8 @@ const app = express();
 const connection = require('./Connection');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const Weather = require('./Weather');
+//const Weather = require('./Weather');
+const Message = require('./models/Message.js');
 
 const PORT = 8000;
 
@@ -15,7 +16,7 @@ connection();
 
 function ChangeStream() {
     try {
-        const changeStream = Weather.watch([], { fullDocument: 'updateLookup' });
+        const changeStream = Message.watch([], { fullDocument: 'updateLookup' });
 
         changeStream.on('change', change => {
             console.log("Change:", change);
