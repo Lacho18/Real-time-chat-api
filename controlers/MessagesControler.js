@@ -2,11 +2,35 @@ const mongoose = require('mongoose');
 const asyncHandler = require('express-async-handler');
 const Message = require('../models/Message');
 
-//Write functions to release the logic of the message app
+//Gets the necessary messages
 const getNecessaryMessages = asyncHandler(async (req, res) => {
+    const messagesLimit = 20;
+    const chatDuo = JSON.parse(req.query.chatDuo);
 
+    //Gets all needed messages, with limit and sorted by the time they were send
+    const allMessages = await Message
+        .find({
+            sendFrom: { $in: [chatDuo.currentUser, chatDuo.chatWith] },
+            sendTo: { $in: [chatDuo.currentUser, chatDuo.chatWith] }
+        })
+        .sort({ timeOfSending: 1 })
+        .limit(messagesLimit)
+        .exec();
+
+    console.log("LOOK HERE");
+    console.log(chatDuo);
+    console.log("-----------------------------------------------------------------------------");
+    console.log(allMessages);
+
+    if (allMessages) {
+        return res.status(201).json(allMessages);
+    }
+    else {
+        return res.status(400).json({ message: "Can not find the messages with this chat" });
+    }
 });
 
+//Inserts a new message in the database
 const insertMessage = asyncHandler(async (req, res) => {
     let newMessageData = req.body;
 
@@ -14,8 +38,8 @@ const insertMessage = asyncHandler(async (req, res) => {
 
     //Finds the last message, in order to get its ID and set the new message's id with 1 higher
     let lastAddedMessage = await Message.findOne({}).sort({ id: -1 }).exec();
-    console.log(lastAddedMessage);
 
+    //Adds the new id field with value bigger than the last message with one
     if (lastAddedMessage) {
         newMessageID = lastAddedMessage.id + 1;
         newMessageData.id = newMessageID;
@@ -26,11 +50,7 @@ const insertMessage = asyncHandler(async (req, res) => {
     }
 
     if (checkForFieldsContent(newMessageData)) {
-        console.log("Will insert : ");
-        console.log(newMessageData);
-
-        let messageInserts = null;
-        //let messageInserts = await Message.create(newMessageData);
+        let messageInserts = await Message.create(newMessageData);
 
         if (messageInserts) {
             return res.status(201).json({ message: "Success" });
@@ -44,15 +64,17 @@ const insertMessage = asyncHandler(async (req, res) => {
     }
 });
 
+//Function that changes already existing message
 const updateMessage = asyncHandler(async (req, res) => {
 
 });
 
+//Function that deletes a message
 const deleteMessage = asyncHandler(async (req, res) => {
 
 });
 
-//Function that check wheather all fields in a JSON object have values
+//Function that check whether all fields in a JSON object have values
 function checkForFieldsContent(jsonObject) {
     //iterates over every field in the object
     for (let key in jsonObject) {

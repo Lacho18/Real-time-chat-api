@@ -11,7 +11,6 @@ router.get('/', async (req, res) => {
     allUsers = allUsers.filter(user => user.username !== notUser);
 
     if (allUsers) {
-        console.log(allUsers);
         return res.status(201).json({ allUsers: allUsers })
     }
     else {

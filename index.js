@@ -3,10 +3,13 @@ const app = express();
 const connection = require('./Connection');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-//const Weather = require('./Weather');
+const WebSocket = require('ws');
 const Message = require('./models/Message.js');
 
 const PORT = 8000;
+
+//Sets up a web socket
+const wss = new WebSocket.Server({ port: 8080 });
 
 app.use(cors());
 
@@ -19,7 +22,19 @@ function ChangeStream() {
         const changeStream = Message.watch([], { fullDocument: 'updateLookup' });
 
         changeStream.on('change', change => {
-            console.log("Change:", change);
+            //Checks the type of the operation, whether it is insert or not
+            if (change.operationType === 'insert') {
+                //gets the inserted document data
+                const insertedData = change.fullDocument;
+
+                //Sends the data to all connected to the web socket users
+                wss.clients.forEach(client => {
+                    //Checks if the socket connection is open
+                    if (client.readyState === WebSocket.OPEN) {
+                        client.send(JSON.stringify(insertedData));
+                    }
+                })
+            }
         });
 
         console.log("Change stream is active...");
@@ -32,31 +47,7 @@ function ChangeStream() {
 
 ChangeStream();
 
-/*function addTemperature() {
-    fetch(`https://api.openweathermap.org/data/2.5/weather?q=${"London"}&appid=${apiKey}`)
-        .then(response => response.json())
-        .then(async (data) => {
-            console.log(data);
-            //console.log(`The temperature in ${data.name} is ${data.main.temp}°C`);
-            let dataObject = {
-                temperature: {
-                    celsium: (data.main.temp - 32) * (5 / 9),
-                    fahrenheit: data.main.temp,
-                    celvin: (data.main.temp - 32) * (5 / 9) + 273.15
-                },
-                location: data.name
-            }
-
-            await Weather.create(dataObject);
-        })
-        .catch(error => console.error(error))
-}*/
-
-//addTemperature();
-
 app.get('/test', (req, res) => {
-    console.log("bravo :)");
-
     res.status(201).json({ message: "Successful connection!" });
 });
 

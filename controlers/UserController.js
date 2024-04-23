@@ -5,8 +5,6 @@ const bcrypt = require('bcrypt');
 const createNewUser = asyncHandler(async (req, res) => {
     const { username, password, confPassword } = req.body;
 
-    console.log(req.body);
-
     //Checks for empty input fields
     if (!username || !password || !confPassword) {
         return res.status(400).json({ message: "All fields are required!" });
