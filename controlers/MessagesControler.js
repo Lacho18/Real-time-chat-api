@@ -17,11 +17,6 @@ const getNecessaryMessages = asyncHandler(async (req, res) => {
         .limit(messagesLimit)
         .exec();
 
-    console.log("LOOK HERE");
-    console.log(chatDuo);
-    console.log("-----------------------------------------------------------------------------");
-    console.log(allMessages);
-
     if (allMessages) {
         return res.status(201).json(allMessages);
     }

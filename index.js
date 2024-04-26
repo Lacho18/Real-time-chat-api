@@ -10,12 +10,26 @@ const PORT = 8000;
 
 //Sets up a web socket
 const wss = new WebSocket.Server({ port: 8080 });
+const userConnection = new Map();
 
 app.use(cors());
 
 app.use(bodyParser.json());
 
 connection();
+
+wss.on('connection', (ws, req) => {
+    let userUsername;
+    ws.on('message', (message) => {
+        const data = JSON.parse(message);
+        userUsername = data.data;
+        userConnection.set(userUsername, ws);
+    })
+
+    ws.on('close', () => {
+        userConnection.delete(userUsername);
+    })
+})
 
 function ChangeStream() {
     try {
@@ -24,20 +38,22 @@ function ChangeStream() {
         changeStream.on('change', change => {
             //Checks the type of the operation, whether it is insert or not
             if (change.operationType === 'insert') {
-                //gets the inserted document data
+                //gets the inserted document data  
                 const insertedData = change.fullDocument;
 
-                //Sends the data to all connected to the web socket users
-                wss.clients.forEach(client => {
-                    //Checks if the socket connection is open
-                    if (client.readyState === WebSocket.OPEN) {
-                        client.send(JSON.stringify(insertedData));
-                    }
-                })
+                const recipientSocketReceiver = userConnection.get(insertedData.sendTo);
+                const recipientSocketSender = userConnection.get(insertedData.sendFrom);
+
+                //Sends the message just to the sender and receiver.
+                if (recipientSocketReceiver.readyState === WebSocket.OPEN) {
+                    recipientSocketReceiver.send(JSON.stringify(insertedData));
+                }
+
+                if (recipientSocketSender.readyState === WebSocket.OPEN) {
+                    recipientSocketSender.send(JSON.stringify(insertedData));
+                }
             }
         });
-
-        console.log("Change stream is active...");
     } catch (error) {
         console.error("Error setting up change stream:", error);
     }
@@ -46,10 +62,6 @@ function ChangeStream() {
 }
 
 ChangeStream();
-
-app.get('/test', (req, res) => {
-    res.status(201).json({ message: "Successful connection!" });
-});
 
 app.use('/user', require('./routes/UserRoute'));
 
